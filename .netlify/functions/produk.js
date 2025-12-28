@@ -1,10 +1,10 @@
-export async function handler(event) {
+exports.handler = async (event) => {
   try {
     // WAJIB POST
     if (event.httpMethod !== "POST") {
       return {
         statusCode: 405,
-        body: "Method Not Allowed",
+        body: "Method Not Allowed"
       };
     }
 
@@ -14,27 +14,25 @@ export async function handler(event) {
     if (!target) {
       return {
         statusCode: 400,
-        body: "Target tidak ada",
+        body: "Target tidak ada"
       };
     }
 
-    // =====================
-    // GOOGLE SHEET
-    // =====================
+    // === GOOGLE SHEET ===
     const SHEET_ID = "177kg9LvopYqir5PZS7YTd8IIOm4dwrGj45VRdMjIDl";
     const SHEET_NAME = "Sheet1";
     const sheetUrl = `https://opensheet.elk.sh/${SHEET_ID}/${SHEET_NAME}`;
 
-    const sheetRes = await fetch(sheetUrl);
-    const sheetData = await sheetRes.json();
+    const res = await fetch(sheetUrl);
+    const data = await res.json();
 
-    const products = sheetData.filter(
-      (p) => p.STATUS && p.STATUS.toLowerCase() === "ready"
+    const products = data.filter(
+      p => p.STATUS && p.STATUS.toLowerCase() === "ready"
     );
 
     if (products.length === 0) {
-      await sendWA(target, "❌ Tidak ada produk ready.");
-      return { statusCode: 200, body: "No products" };
+      await sendWA(target, "❌ Tidak ada produk ready saat ini");
+      return { statusCode: 200, body: "OK" };
     }
 
     let message = "📦 *DAFTAR PRODUK PREMIUM*\n\n";
@@ -51,29 +49,27 @@ export async function handler(event) {
 
     return {
       statusCode: 200,
-      body: "Pesan terkirim",
+      body: "Pesan terkirim"
     };
+
   } catch (err) {
     return {
       statusCode: 500,
-      body: err.message,
+      body: err.toString()
     };
   }
-}
+};
 
-// =====================
-// FONNTE
-// =====================
 async function sendWA(target, message) {
-  return fetch("https://api.fonnte.com/send", {
+  await fetch("https://api.fonnte.com/send", {
     method: "POST",
     headers: {
-      Authorization: process.env.FONNTE_TOKEN,
-      "Content-Type": "application/x-www-form-urlencoded",
+      "Authorization": process.env.FONNTE_TOKEN,
+      "Content-Type": "application/x-www-form-urlencoded"
     },
     body: new URLSearchParams({
       target,
-      message,
-    }),
+      message
+    })
   });
 }
