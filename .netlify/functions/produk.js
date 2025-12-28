@@ -52,16 +52,16 @@ export async function handler(event) {
 
     // 🔹 Kirim via Fonnte
     await fetch("https://api.fonnte.com/send", {
-      method: "POST",
-      headers: {
-        "Authorization": process.env.FONNTE_TOKEN,
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: new URLSearchParams({
-        target,
-        message
-      })
-    });
+  method: "POST",
+  headers: {
+    "Authorization": process.env.FONNTE_TOKEN
+  },
+  body: new URLSearchParams({
+    target: target,
+    message: messageText
+  })
+});
+
 
     return {
       statusCode: 200,
