@@ -1,6 +1,6 @@
-exports.handler = async (event) => {
+export async function handler(event) {
   try {
-    // WAJIB POST
+    // ❌ Tolak selain POST
     if (event.httpMethod !== "POST") {
       return {
         statusCode: 405,
@@ -8,48 +8,64 @@ exports.handler = async (event) => {
       };
     }
 
+    // 🔹 Ambil target dari body
     const body = JSON.parse(event.body || "{}");
     const target = body.target;
 
     if (!target) {
       return {
         statusCode: 400,
-        body: "Target tidak ada"
+        body: JSON.stringify({ error: "target kosong" })
       };
     }
 
-    // === GOOGLE SHEET ===
+    // 🔹 Google Sheet (opensheet)
     const SHEET_ID = "177kg9LvopYqir5PZS7YTd8IIOm4dwrGj45VRdMjIDl";
     const SHEET_NAME = "Sheet1";
-    const sheetUrl = `https://opensheet.elk.sh/${SHEET_ID}/${SHEET_NAME}`;
+    const url = `https://opensheet.elk.sh/${SHEET_ID}/${SHEET_NAME}`;
 
-    const res = await fetch(sheetUrl);
+    const res = await fetch(url);
     const data = await res.json();
 
+    // 🔹 Filter READY
     const products = data.filter(
       p => p.STATUS && p.STATUS.toLowerCase() === "ready"
     );
 
     if (products.length === 0) {
-      await sendWA(target, "❌ Tidak ada produk ready saat ini");
-      return { statusCode: 200, body: "OK" };
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ message: "Tidak ada produk ready" })
+      };
     }
 
+    // 🔹 Susun pesan
     let message = "📦 *DAFTAR PRODUK PREMIUM*\n\n";
 
     products.forEach((p, i) => {
       message += `*${i + 1}. ${p.NAMA}*\n`;
-      message += `💰 Harga: Rp${p.HARGA}\n`;
+      message += `💰 Rp${p.HARGA}\n`;
       message += `📝 ${p.DESKRIPSI}\n\n`;
     });
 
     message += "👉 Balas *ANGKA* untuk order";
 
-    await sendWA(target, message);
+    // 🔹 Kirim via Fonnte
+    await fetch("https://api.fonnte.com/send", {
+      method: "POST",
+      headers: {
+        "Authorization": process.env.FONNTE_TOKEN,
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: new URLSearchParams({
+        target,
+        message
+      })
+    });
 
     return {
       statusCode: 200,
-      body: "Pesan terkirim"
+      body: JSON.stringify({ success: true })
     };
 
   } catch (err) {
@@ -58,18 +74,4 @@ exports.handler = async (event) => {
       body: err.toString()
     };
   }
-};
-
-async function sendWA(target, message) {
-  await fetch("https://api.fonnte.com/send", {
-    method: "POST",
-    headers: {
-      "Authorization": process.env.FONNTE_TOKEN,
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: new URLSearchParams({
-      target,
-      message
-    })
-  });
 }
