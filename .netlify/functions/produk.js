@@ -1,5 +1,3 @@
-const fetch = require("node-fetch");
-
 exports.handler = async (event) => {
   try {
     const body = JSON.parse(event.body || "{}");
@@ -17,6 +15,7 @@ exports.handler = async (event) => {
     const SHEET_NAME = "Sheet1";
     const sheetUrl = `https://opensheet.elk.sh/${SHEET_ID}/${SHEET_NAME}`;
 
+    // ✅ fetch bawaan Netlify
     const res = await fetch(sheetUrl);
     const data = await res.json();
 
@@ -41,14 +40,14 @@ exports.handler = async (event) => {
       message += `📝 ${p.DESKRIPSI}\n\n`;
     });
 
-    message += "👉 Balas *ANGKA* untuk order\n";
-    message += "👉 Balas *KATEGORI* untuk filter produk";
+    message += "👉 Balas *ANGKA* untuk order";
 
     // 🔹 KIRIM WA VIA FONNTE
     await fetch("https://api.fonnte.com/send", {
       method: "POST",
       headers: {
-        "Authorization": process.env.FONNTE_TOKEN
+        "Authorization": process.env.FONNTE_TOKEN,
+        "Content-Type": "application/x-www-form-urlencoded"
       },
       body: new URLSearchParams({
         target,
