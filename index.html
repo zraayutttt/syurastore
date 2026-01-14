@@ -1,195 +1,483 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SYURASTORE - Digital Pro List</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
-        :root { --primary-color: #eab308; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; color: #f8fafc; scroll-behavior: smooth; }
-        .text-primary { color: var(--primary-color); }
-        .bg-primary { background-color: var(--primary-color); }
-        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); transition: 0.3s; }
-        .glass-card:hover { transform: translateY(-8px); border-color: var(--primary-color); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
-        .tab-active { background-color: var(--primary-color) !important; color: #0f172a !important; font-weight: bold; }
-        .status-ready { background: #16a34a; color: white; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: bold; }
-        .status-kosong { background: #dc2626; color: white; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: bold; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SYURASTORE - Digital Pro List</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+    :root { --primary-color: #eab308; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+      scroll-behavior: smooth;
+    }
+    .text-primary { color: var(--primary-color); }
+    .bg-primary { background-color: var(--primary-color); }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: 0.3s;
+    }
+    .glass-card:hover {
+      transform: translateY(-8px);
+      border-color: var(--primary-color);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+    .tab-active {
+      background-color: var(--primary-color) !important;
+      color: #0f172a !important;
+      font-weight: bold;
+    }
+    .status-ready { background: #16a34a; color: white; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: bold; }
+    .status-kosong { background: #dc2626; color: white; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: bold; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+
+    /* biar klik menu tidak ketutup navbar sticky */
+    section { scroll-margin-top: 120px; }
+  </style>
 </head>
+
 <body class="antialiased">
 
-    <nav class="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 p-6">
-        <div class="flex justify-between items-center max-w-6xl mx-auto">
-            <div class="text-2xl font-extrabold tracking-tighter text-primary uppercase">SYURA<span class="text-white">STORE</span></div>
-            <div id="loadingStatus" class="text-xs text-slate-500 animate-pulse">Menghubungkan Server...</div>
-        </div>
-    </nav>
+  <!-- NAVBAR + MENU -->
+  <nav class="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-slate-800">
+    <div class="flex justify-between items-center max-w-6xl mx-auto px-4 py-4">
+      <a href="#home" class="text-2xl font-extrabold tracking-tighter text-primary uppercase">
+        SYURA<span class="text-white">STORE</span>
+      </a>
 
-    <div class="container mx-auto px-4 py-12">
-        <header class="text-center mb-12">
-            <h1 class="text-5xl font-extrabold mb-4 italic">Pilih <span class="text-primary">Layanan</span></h1>
-            <p class="text-slate-400">Akses premium instan dengan proses yang rapi dan otomatis.</p>
-        </header>
+      <div class="hidden md:flex items-center gap-6 text-sm">
+        <a href="#home" class="text-slate-300 hover:text-white transition">Home</a>
+        <a href="#layanan" class="text-slate-300 hover:text-white transition">Layanan</a>
+        <a href="#informasi" class="text-slate-300 hover:text-white transition">Informasi</a>
+        <a href="#kontak" class="text-slate-300 hover:text-white transition">Kontak</a>
+      </div>
 
-        <div class="max-w-6xl mx-auto mb-10 space-y-4">
-            <input type="text" id="searchInput" onkeyup="filterProducts()" placeholder="Cari layanan (YouTube, Netflix...)" 
-                class="w-full p-4 rounded-2xl bg-slate-800 border border-slate-700 outline-none focus:border-primary text-white transition-all">
-            
-            <div id="categoryTabs" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                <button onclick="setCategory('All')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800 tab-active">Semua</button>
-                <button onclick="setCategory('PaketData')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">PaketData</button>
-                <button onclick="setCategory('YouTube')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">YouTube</button>
-                <button onclick="setCategory('AM')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">AM</button>
-                <button onclick="setCategory('Netflix')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Netflix</button>
-		<button onclick="setCategory('GoogleOne')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">GoogleOne</button>
-                <button onclick="setCategory('Vidio')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Vidio</button>
-                <button onclick="setCategory('Disney')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Disney</button>
-                <button onclick="setCategory('Apple')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Apple</button>
-                <button onclick="setCategory('Canva')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Canva</button>
-                <button onclick="setCategory('CapCut')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">CapCut</button>
-                <button onclick="setCategory('Apps')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Apps</button>
-                <button onclick="setCategory('SMM')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">SMM</button>
-                <button onclick="setCategory('AI')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">AI</button>
-                <button onclick="setCategory('Viu')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Viu</button>
-                <button onclick="setCategory('Spotify')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Spotify</button>
-            </div>
+      <div class="flex items-center gap-3">
+        <div id="loadingStatus" class="hidden sm:block text-xs text-slate-500 animate-pulse">
+          Menghubungkan Server...
         </div>
 
-        <div id="productGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"></div>
+        <button onclick="openOrderModal()"
+          class="bg-slate-800 border border-slate-700 text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-700 transition">
+          Cara Order
+        </button>
+
+        <a href="#kontak"
+          class="bg-primary text-slate-900 px-4 py-2 rounded-xl font-bold shadow hover:scale-[1.02] transition">
+          Hubungi
+        </a>
+      </div>
     </div>
 
-    <script>
-        // --- MASUKKAN URL WEB APP GOOGLE SHEETS ANDA DI SINI ---
-        const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbya5auCKLoaiidDwXlwIa0KZ-yFrOjjnZXJIQl9ok6Tid673RAlcr2-nelP3mLatLKu/exec"; 
-        const MY_PHONE_NUMBER = "6282175939107";
-        
-        let allProducts = [];
-        let currentCategory = 'All';
+    <!-- menu mobile -->
+    <div class="md:hidden border-t border-slate-800">
+      <div class="max-w-6xl mx-auto px-4 py-3 flex gap-4 text-sm overflow-x-auto no-scrollbar">
+        <a href="#home" class="text-slate-300 hover:text-white whitespace-nowrap">Home</a>
+        <a href="#layanan" class="text-slate-300 hover:text-white whitespace-nowrap">Layanan</a>
+        <a href="#informasi" class="text-slate-300 hover:text-white whitespace-nowrap">Informasi</a>
+        <a href="#kontak" class="text-slate-300 hover:text-white whitespace-nowrap">Kontak</a>
+        <button onclick="openOrderModal()" class="text-slate-300 hover:text-white whitespace-nowrap font-bold">
+          Cara Order
+        </button>
+        <span id="loadingStatusMobile" class="ml-auto text-xs text-slate-500 animate-pulse whitespace-nowrap">
+          Menghubungkan...
+        </span>
+      </div>
+    </div>
+  </nav>
 
-        async function fetchProducts() {
-            try {
-                const response = await fetch(SHEET_API_URL);
-                allProducts = await response.json();
-                // Urutkan A-Z
-                allProducts.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-                filterProducts();
-                document.getElementById('loadingStatus').innerText = "✅ Server Terkoneksi";
-            } catch (error) {
-                document.getElementById('loadingStatus').innerText = "❌ Gangguan Koneksi";
-            }
+  <!-- CONTENT -->
+  <div class="container mx-auto px-4 py-12">
+
+    <!-- HERO -->
+    <header id="home" class="text-center mb-12">
+      <h1 class="text-5xl font-extrabold mb-4 italic">Pilih <span class="text-primary">Layanan</span></h1>
+      <p class="text-slate-400">Akses premium instan dengan proses yang rapi dan otomatis.</p>
+    </header>
+
+    <!-- LAYANAN -->
+    <section id="layanan">
+      <div class="max-w-6xl mx-auto mb-10 space-y-4">
+        <input type="text" id="searchInput" onkeyup="filterProducts()" placeholder="Cari layanan (YouTube, Netflix...)"
+          class="w-full p-4 rounded-2xl bg-slate-800 border border-slate-700 outline-none focus:border-primary text-white transition-all">
+
+        <div class="flex flex-wrap gap-3">
+          <button onclick="openOrderModal()"
+            class="bg-slate-800 border border-slate-700 text-white px-5 py-3 rounded-2xl font-bold hover:bg-slate-700 transition">
+            Cara Order
+          </button>
+          <a href="#kontak"
+            class="bg-primary text-slate-900 px-5 py-3 rounded-2xl font-bold hover:scale-[1.02] transition">
+            Kontak Admin
+          </a>
+        </div>
+
+        <div id="categoryTabs" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar mt-2">
+          <button onclick="setCategory('All')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800 tab-active">Semua</button>
+          <button onclick="setCategory('PaketData')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">PaketData</button>
+          <button onclick="setCategory('YouTube')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">YouTube</button>
+          <button onclick="setCategory('AM')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">AM</button>
+          <button onclick="setCategory('Netflix')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Netflix</button>
+          <button onclick="setCategory('GoogleOne')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">GoogleOne</button>
+          <button onclick="setCategory('Vidio')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Vidio</button>
+          <button onclick="setCategory('Disney')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Disney</button>
+          <button onclick="setCategory('Apple')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Apple</button>
+          <button onclick="setCategory('Canva')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Canva</button>
+          <button onclick="setCategory('CapCut')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">CapCut</button>
+          <button onclick="setCategory('Apps')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Apps</button>
+          <button onclick="setCategory('SMM')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">SMM</button>
+          <button onclick="setCategory('AI')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">AI</button>
+          <button onclick="setCategory('Viu')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Viu</button>
+          <button onclick="setCategory('Spotify')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Spotify</button>
+        </div>
+      </div>
+
+      <div id="productGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"></div>
+    </section>
+
+    <!-- INFORMASI -->
+    <section id="informasi" class="max-w-6xl mx-auto mt-16">
+      <div class="glass-card rounded-[2.5rem] p-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h2 class="text-3xl font-extrabold mb-1">Informasi</h2>
+            <p class="text-slate-400">Panduan singkat biar order kamu lancar.</p>
+          </div>
+          <button onclick="openOrderModal()"
+            class="bg-primary text-slate-900 px-5 py-3 rounded-2xl font-extrabold hover:scale-[1.02] transition">
+            Buka Cara Order
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+          <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6">
+            <h3 class="font-bold mb-2">Cara Order</h3>
+            <ol class="list-decimal pl-5 text-sm text-slate-300 space-y-1">
+              <li>Pilih layanan & paket.</li>
+              <li>Klik “Pesan Sekarang”.</li>
+              <li>Ikuti instruksi pembayaran dari admin.</li>
+              <li>Pesanan diproses sesuai ketentuan.</li>
+            </ol>
+          </div>
+
+          <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6">
+            <h3 class="font-bold mb-2">Ketentuan</h3>
+            <ul class="list-disc pl-5 text-sm text-slate-300 space-y-1">
+              <li>Pastikan data yang dikirim benar.</li>
+              <li>Garansi sesuai deskripsi produk.</li>
+              <li>Stok/ready mengikuti status di website.</li>
+            </ul>
+          </div>
+
+          <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6">
+            <h3 class="font-bold mb-2">FAQ</h3>
+            <div class="text-sm text-slate-300 space-y-2">
+              <p><span class="font-bold text-white">Q:</span> Berapa lama prosesnya?</p>
+              <p><span class="font-bold text-white">A:</span> Umumnya cepat, tergantung layanan & antrian.</p>
+              <p><span class="font-bold text-white">Q:</span> Kalau stok habis?</p>
+              <p><span class="font-bold text-white">A:</span> Tunggu restok atau chat admin.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- KONTAK -->
+    <section id="kontak" class="max-w-6xl mx-auto mt-10">
+      <div class="glass-card rounded-[2.5rem] p-8">
+        <h2 class="text-3xl font-extrabold mb-2">Kontak</h2>
+        <p class="text-slate-400 mb-6">Butuh bantuan? Hubungi admin lewat tombol di bawah.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6">
+            <h3 class="font-bold mb-2">Chat Admin</h3>
+            <p class="text-sm text-slate-300">Respon cepat saat jam aktif.</p>
+
+            <div class="flex flex-wrap gap-3 mt-4">
+              <a class="bg-primary text-slate-900 px-5 py-3 rounded-2xl font-bold hover:scale-105 transition"
+                 target="_blank"
+                 href="https://wa.me/6282175939107">
+                WhatsApp
+              </a>
+              <!-- kalau punya telegram, buka komentar ini -->
+              <!--
+              <a class="bg-slate-800 border border-slate-700 px-5 py-3 rounded-2xl font-bold hover:bg-slate-700 transition"
+                 target="_blank"
+                 href="https://t.me/USERNAME">
+                Telegram
+              </a>
+              -->
+            </div>
+          </div>
+
+          <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-6">
+            <h3 class="font-bold mb-2">Jam Operasional</h3>
+            <ul class="text-sm text-slate-300 space-y-1">
+              <li>Senin–Minggu: 08.00–23.00 WIB</li>
+              <li>Di luar jam aktif: dibalas secepatnya</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-800 bg-slate-900/40">
+    <div class="max-w-6xl mx-auto px-4 py-6 text-sm text-slate-500 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+      <span>© <span id="year"></span> SYURASTORE • All rights reserved</span>
+      <span class="text-slate-600">Made with ❤️ for SyuraStore</span>
+    </div>
+  </footer>
+
+  <!-- FLOATING WHATSAPP BUTTON -->
+  <button id="waFloatBtn"
+    class="fixed bottom-5 right-5 z-50 flex items-center gap-3 bg-green-500 hover:bg-green-600 text-white font-extrabold px-5 py-3 rounded-full shadow-2xl transition active:scale-95">
+    <span class="text-xl">💬</span>
+    <span class="hidden sm:inline">Chat WhatsApp</span>
+  </button>
+
+  <!-- MODAL CARA ORDER -->
+  <div id="orderModal" class="fixed inset-0 z-[60] hidden">
+    <div id="orderOverlay" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+
+    <div class="relative mx-auto mt-16 max-w-2xl px-4">
+      <div class="glass-card rounded-[2.5rem] p-8 border border-slate-700/40">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h2 class="text-3xl font-extrabold">Cara Order</h2>
+            <p class="text-slate-400 mt-1">Ikuti langkah ini biar pesanan kamu cepat diproses.</p>
+          </div>
+          <button id="closeOrderModal"
+            class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-black">
+            ✕
+          </button>
+        </div>
+
+        <div class="mt-6 grid gap-4">
+          <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-5">
+            <p class="font-bold text-primary">1) Pilih layanan</p>
+            <p class="text-sm text-slate-300 mt-1">Cari layanan yang kamu butuhkan, lalu cek status “STOK TERSEDIA”.</p>
+          </div>
+
+          <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-5">
+            <p class="font-bold text-primary">2) Klik “Pesan Sekarang”</p>
+            <p class="text-sm text-slate-300 mt-1">Kamu akan diarahkan ke WhatsApp dengan format pesan otomatis.</p>
+          </div>
+
+          <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-5">
+            <p class="font-bold text-primary">3) Kirim data yang dibutuhkan</p>
+            <p class="text-sm text-slate-300 mt-1">Misalnya email/nomor tujuan (tergantung produk). Pastikan benar.</p>
+          </div>
+
+          <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-5">
+            <p class="font-bold text-primary">4) Pembayaran & proses</p>
+            <p class="text-sm text-slate-300 mt-1">Admin akan kirim instruksi pembayaran. Setelah bayar, order diproses.</p>
+          </div>
+        </div>
+
+        <div class="mt-7 flex flex-col sm:flex-row gap-3">
+          <button id="btnOrderToWA"
+            class="bg-primary text-slate-900 px-6 py-3 rounded-2xl font-extrabold shadow hover:scale-[1.02] transition">
+            Chat Admin Sekarang
+          </button>
+          <button id="btnCloseModal2"
+            class="bg-slate-800 border border-slate-700 px-6 py-3 rounded-2xl font-bold hover:bg-slate-700 transition">
+            Tutup
+          </button>
+        </div>
+
+        <p class="text-xs text-slate-500 mt-4">
+          Tips: untuk Paket Data, isi nomor tujuan dengan benar ya.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // --- MASUKKAN URL WEB APP GOOGLE SHEETS ANDA DI SINI ---
+    const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbya5auCKLoaiidDwXlwIa0KZ-yFrOjjnZXJIQl9ok6Tid673RAlcr2-nelP3mLatLKu/exec";
+    const MY_PHONE_NUMBER = "6282175939107";
+
+    let allProducts = [];
+    let currentCategory = 'All';
+
+    function openOrderModal() {
+      document.getElementById("orderModal").classList.remove("hidden");
+    }
+    function closeOrderModal() {
+      document.getElementById("orderModal").classList.add("hidden");
+    }
+
+    async function fetchProducts() {
+      try {
+        const response = await fetch(SHEET_API_URL);
+        allProducts = await response.json();
+        // Urutkan A-Z
+        allProducts.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+        filterProducts();
+
+        document.getElementById('loadingStatus').innerText = "✅ Server Terkoneksi";
+        const mobile = document.getElementById('loadingStatusMobile');
+        if (mobile) mobile.innerText = "✅ Online";
+      } catch (error) {
+        document.getElementById('loadingStatus').innerText = "❌ Gangguan Koneksi";
+        const mobile = document.getElementById('loadingStatusMobile');
+        if (mobile) mobile.innerText = "❌ Offline";
+      }
+    }
+
+    function setCategory(cat) {
+      currentCategory = cat;
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('tab-active');
+        if (btn.innerText.toLowerCase() === (cat === 'All' ? 'semua' : cat.toLowerCase())) btn.classList.add('tab-active');
+      });
+      filterProducts();
+    }
+
+    function filterProducts() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = allProducts.filter(p => {
+        const pCat = (p.category || "").toString().trim().toLowerCase();
+        const targetCat = currentCategory.toLowerCase();
+        const matchCat = currentCategory === 'All' || pCat === targetCat;
+        const matchSearch = (p.name || "").toLowerCase().includes(searchTerm);
+        return matchCat && matchSearch;
+      });
+      renderProducts(filtered);
+    }
+
+    function renderProducts(products) {
+      const pGrid = document.getElementById('productGrid');
+      pGrid.innerHTML = '';
+
+      if (products.length === 0) {
+        pGrid.innerHTML = `<div class="col-span-full text-center py-20 text-slate-500 italic">Layanan ${currentCategory} belum tersedia...</div>`;
+        return;
+      }
+
+      products.forEach(p => {
+        const isReady = p.status && p.status.toLowerCase() === 'ready';
+
+        // --- PERBAIKAN LOGO [object Object] ---
+        let iconContent = '';
+        let rawIcon = p.icon;
+        if (typeof rawIcon === 'object' || !rawIcon) {
+          iconContent = `<div class="text-5xl">💎</div>`;
+        } else {
+          let iconStr = String(rawIcon).trim();
+          if (iconStr.startsWith('http')) {
+            iconContent = `<img src="${iconStr}" class="w-16 h-16 object-contain rounded-lg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/679/679821.png';">`;
+          } else {
+            iconContent = `<div class="text-5xl">${iconStr}</div>`;
+          }
         }
 
-        function setCategory(cat) {
-            currentCategory = cat;
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('tab-active');
-                if(btn.innerText.toLowerCase() === (cat === 'All' ? 'semua' : cat.toLowerCase())) btn.classList.add('tab-active');
-            });
-            filterProducts();
+        // --- LOGIKA PESAN WHATSAPP PINTAR ---
+        const tanggal = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const waktu = new Date().toLocaleTimeString('id-ID');
+        const isPaketData = (p.category || "").toString().trim().toLowerCase() === 'paketdata';
+
+        let textPesan = "";
+
+        if (isPaketData) {
+          textPesan =
+            `🛒 *FORMULIR PESANAN - SYURASTORE*\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+            `📦 *RINCIAN PAKET DATA:*\n` +
+            `• *Produk:* ${p.name}\n` +
+            `• *Ket:* ${p.desc || '-'}\n` +
+            `• *Harga:* Rp ${p.price}\n\n` +
+            `📱 *DATA TUJUAN:*\n` +
+            `• *Nomor HP:* (Ketik Nomor HP Anda di sini)\n\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+            `Halo Admin, saya ingin membeli paket data di atas. Mohon segera diproses ke nomor tersebut ya! 🙏`;
+        } else {
+          textPesan =
+            `🛒 *PESANAN BARU - SYURASTORE* 🛒\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+            `📦 *RINCIAN LAYANAN:*\n` +
+            `• *Produk:* ${p.name}\n` +
+            `• *Ket:* ${p.desc || '-'}\n` +
+            `• *Harga:* Rp ${p.price}\n\n` +
+            `📅 *WAKTU TRANSAKSI:*\n` +
+            `• ${tanggal} (${waktu} WIB)\n\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+            `Halo Admin, saya ingin memesan produk di atas. Mohon instruksi pembayaran selanjutnya ya! 🙏`;
         }
 
-        function filterProducts() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = allProducts.filter(p => {
-                // Perbaikan Filter: Menghilangkan spasi dan mengabaikan huruf besar/kecil
-                const pCat = (p.category || "").toString().trim().toLowerCase();
-                const targetCat = currentCategory.toLowerCase();
-                const matchCat = currentCategory === 'All' || pCat === targetCat;
-                const matchSearch = (p.name || "").toLowerCase().includes(searchTerm);
-                return matchCat && matchSearch;
-            });
-            renderProducts(filtered);
+        const waMessage = encodeURIComponent(textPesan);
+
+        pGrid.innerHTML += `
+          <div class="glass-card p-8 rounded-[2.5rem] flex flex-col h-full ${!isReady ? 'opacity-60' : ''}">
+            <div class="flex justify-between items-start mb-6">
+              <div class="h-16 flex items-center">${iconContent}</div>
+              <span class="${isReady ? 'status-ready' : 'status-kosong'}">${isReady ? 'STOK TERSEDIA' : 'STOK HABIS'}</span>
+            </div>
+            <h3 class="text-2xl font-bold mb-1">${p.name}</h3>
+            <p class="text-[10px] text-primary font-bold uppercase tracking-widest mb-4">${p.category || 'Premium'}</p>
+            <p class="text-slate-400 text-sm mb-8 flex-grow leading-relaxed italic border-l-2 border-primary/30 pl-3">${p.desc || 'Garansi Terjamin'}</p>
+            <div class="flex justify-between items-center pt-6 border-t border-slate-700/50">
+              <div>
+                <p class="text-[10px] text-slate-500 font-bold uppercase">Harga Nett</p>
+                <span class="text-2xl font-black text-primary">${p.price}</span>
+              </div>
+              ${isReady
+                ? `<a href="https://wa.me/${MY_PHONE_NUMBER}?text=${waMessage}" target="_blank" class="bg-primary text-slate-900 px-6 py-3 rounded-2xl font-bold shadow-lg hover:scale-105 transition-all">Pesan Sekarang</a>`
+                : `<button disabled class="bg-slate-700 text-slate-500 px-6 py-3 rounded-2xl font-bold cursor-not-allowed uppercase text-[10px]">Layanan Habis</button>`
+              }
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // === Floating WhatsApp + Modal events ===
+    document.addEventListener("DOMContentLoaded", () => {
+      const waBtn = document.getElementById("waFloatBtn");
+      const modal = document.getElementById("orderModal");
+      const overlay = document.getElementById("orderOverlay");
+      const close1 = document.getElementById("closeOrderModal");
+      const close2 = document.getElementById("btnCloseModal2");
+      const btnOrderToWA = document.getElementById("btnOrderToWA");
+
+      if (waBtn) {
+        waBtn.addEventListener("click", () => {
+          const text = encodeURIComponent("Halo Admin SYURASTORE, saya mau tanya/order 🙏");
+          window.open(`https://wa.me/${MY_PHONE_NUMBER}?text=${text}`, "_blank");
+        });
+      }
+
+      const closeAll = () => closeOrderModal();
+      if (overlay) overlay.addEventListener("click", closeAll);
+      if (close1) close1.addEventListener("click", closeAll);
+      if (close2) close2.addEventListener("click", closeAll);
+
+      if (btnOrderToWA) {
+        btnOrderToWA.addEventListener("click", () => {
+          const text = encodeURIComponent("Halo Admin SYURASTORE, saya ingin order. Mohon info pembayaran ya 🙏");
+          window.open(`https://wa.me/${MY_PHONE_NUMBER}?text=${text}`, "_blank");
+        });
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && modal && !modal.classList.contains("hidden")) {
+          closeAll();
         }
+      });
+    });
 
-        function renderProducts(products) {
-            const pGrid = document.getElementById('productGrid');
-            pGrid.innerHTML = '';
+    window.onload = fetchProducts;
+  </script>
 
-            if (products.length === 0) {
-                pGrid.innerHTML = `<div class="col-span-full text-center py-20 text-slate-500 italic">Layanan ${currentCategory} belum tersedia...</div>`;
-                return;
-            }
-
-            products.forEach(p => {
-                const isReady = p.status && p.status.toLowerCase() === 'ready';
-                
-                // --- PERBAIKAN LOGO [object Object] ---
-                let iconContent = '';
-                let rawIcon = p.icon;
-                if (typeof rawIcon === 'object' || !rawIcon) {
-                    iconContent = `<div class="text-5xl">💎</div>`;
-                } else {
-                    let iconStr = String(rawIcon).trim();
-                    if (iconStr.startsWith('http')) {
-                        iconContent = `<img src="${iconStr}" class="w-16 h-16 object-contain rounded-lg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/679/679821.png';">`;
-                    } else {
-                        iconContent = `<div class="text-5xl">${iconStr}</div>`;
-                    }
-                }
-
-               // --- LOGIKA PESAN WHATSAPP PINTAR ---
-const tanggal = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-const waktu = new Date().toLocaleTimeString('id-ID');
-
-// Cek apakah produk ini termasuk kategori Paket Data
-const isPaketData = (p.category || "").toString().trim().toLowerCase() === 'paketdata';
-
-let textPesan = "";
-
-if (isPaketData) {
-    // Jika kategori Paket Data, tambahkan baris Nomor HP
-    textPesan = `🛒 *FORMULIR PESANAN - SYURASTORE*\n` +
-                `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-                `📦 *RINCIAN PAKET DATA:*\n` +
-                `• *Produk:* ${p.name}\n` +
-                `• *Ket:* ${p.desc || '-'}\n` +
-                `• *Harga:* Rp ${p.price}\n\n` +
-                `📱 *DATA TUJUAN:*\n` +
-                `• *Nomor HP:* (Ketik Nomor HP Anda di sini)\n\n` +
-                `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-                `Halo Admin, saya ingin membeli paket data di atas. Mohon segera diproses ke nomor tersebut ya! 🙏`;
-} else {
-    // Jika produk premium biasa (YouTube/Netflix/dll)
-    textPesan = `🛒 *PESANAN BARU - SYURASTORE* 🛒\n` +
-                `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-                `📦 *RINCIAN LAYANAN:*\n` +
-                `• *Produk:* ${p.name}\n` +
-                `• *Ket:* ${p.desc || '-'}\n` +
-                `• *Harga:* Rp ${p.price}\n\n` +
-                `📅 *WAKTU TRANSAKSI:*\n` +
-                `• ${tanggal} (${waktu} WIB)\n\n` +
-                `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-                `Halo Admin, saya ingin memesan produk di atas. Mohon instruksi pembayaran selanjutnya ya! 🙏`;
-}
-
-const waMessage = encodeURIComponent(textPesan);
-
-                pGrid.innerHTML += `
-                    <div class="glass-card p-8 rounded-[2.5rem] flex flex-col h-full ${!isReady ? 'opacity-60' : ''}">
-                        <div class="flex justify-between items-start mb-6">
-                            <div class="h-16 flex items-center">${iconContent}</div>
-                            <span class="${isReady ? 'status-ready' : 'status-kosong'}">${isReady ? 'STOK TERSEDIA' : 'STOK HABIS'}</span>
-                        </div>
-                        <h3 class="text-2xl font-bold mb-1">${p.name}</h3>
-                        <p class="text-[10px] text-primary font-bold uppercase tracking-widest mb-4">${p.category || 'Premium'}</p>
-                        <p class="text-slate-400 text-sm mb-8 flex-grow leading-relaxed italic border-l-2 border-primary/30 pl-3">${p.desc || 'Garansi Terjamin'}</p>
-                        <div class="flex justify-between items-center pt-6 border-t border-slate-700/50">
-                            <div>
-                                <p class="text-[10px] text-slate-500 font-bold uppercase">Harga Nett</p>
-                                <span class="text-2xl font-black text-primary">${p.price}</span>
-                            </div>
-                            ${isReady ? 
-                                `<a href="https://wa.me/${MY_PHONE_NUMBER}?text=${waMessage}" target="_blank" class="bg-primary text-slate-900 px-6 py-3 rounded-2xl font-bold shadow-lg hover:scale-105 transition-all">Pesan Sekarang</a>` : 
-                                `<button disabled class="bg-slate-700 text-slate-500 px-6 py-3 rounded-2xl font-bold cursor-not-allowed uppercase text-[10px]">Layanan Habis</button>`
-                            }
-                        </div>
-                    </div>`;
-            });
-        }
-        window.onload = fetchProducts;
-    </script>
 </body>
 </html>
