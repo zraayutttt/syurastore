@@ -144,9 +144,9 @@
             <h3 class="font-bold mb-2">Cara Order</h3>
             <ol class="list-decimal pl-5 text-sm text-slate-300 space-y-1">
               <li>Pilih layanan & paket.</li>
-              <li>Klik “Pesan Sekarang”.</li>
-              <li>Ikuti instruksi pembayaran dari admin.</li>
-              <li>Pesanan diproses sesuai ketentuan.</li>
+              <li>Klik “Bayar / Konfirmasi”.</li>
+              <li>Isi form payment + upload bukti.</li>
+              <li>Konfirmasi ke WhatsApp admin.</li>
             </ol>
           </div>
 
@@ -189,14 +189,6 @@
                  href="https://wa.me/6282175939107">
                 WhatsApp
               </a>
-              <!-- kalau punya telegram, buka komentar ini -->
-              <!--
-              <a class="bg-slate-800 border border-slate-700 px-5 py-3 rounded-2xl font-bold hover:bg-slate-700 transition"
-                 target="_blank"
-                 href="https://t.me/USERNAME">
-                Telegram
-              </a>
-              -->
             </div>
           </div>
 
@@ -252,18 +244,18 @@
           </div>
 
           <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-5">
-            <p class="font-bold text-primary">2) Klik “Pesan Sekarang”</p>
-            <p class="text-sm text-slate-300 mt-1">Kamu akan diarahkan ke WhatsApp dengan format pesan otomatis.</p>
+            <p class="font-bold text-primary">2) Klik “Bayar / Konfirmasi”</p>
+            <p class="text-sm text-slate-300 mt-1">Kamu akan diarahkan ke halaman Payment (domain berbeda) untuk upload bukti.</p>
           </div>
 
           <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-5">
-            <p class="font-bold text-primary">3) Kirim data yang dibutuhkan</p>
-            <p class="text-sm text-slate-300 mt-1">Misalnya email/nomor tujuan (tergantung produk). Pastikan benar.</p>
+            <p class="font-bold text-primary">3) Upload bukti + kirim WhatsApp</p>
+            <p class="text-sm text-slate-300 mt-1">Setelah upload, kamu dapat link bukti lalu konfirmasi ke admin.</p>
           </div>
 
           <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-5">
-            <p class="font-bold text-primary">4) Pembayaran & proses</p>
-            <p class="text-sm text-slate-300 mt-1">Admin akan kirim instruksi pembayaran. Setelah bayar, order diproses.</p>
+            <p class="font-bold text-primary">4) Pesanan diproses</p>
+            <p class="text-sm text-slate-300 mt-1">Admin memproses pesanan setelah pembayaran terverifikasi.</p>
           </div>
         </div>
 
@@ -292,10 +284,13 @@
     const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbya5auCKLoaiidDwXlwIa0KZ-yFrOjjnZXJIQl9ok6Tid673RAlcr2-nelP3mLatLKu/exec";
     const MY_PHONE_NUMBER = "6282175939107";
 
+    // ✅ DOMAIN PAYMENT (DOMAIN KE-2) — GANTI JIKA URL PAYMENT KAMU BERBEDA
+    const PAYMENT_DOMAIN = "https://syurastorepayment.netlify.app";
+
     // ===== STATE =====
     let allProducts = [];
-    let currentMain = "All"; // All | AppsPremium | PaketData | Apps
-    let currentSub = "All";  // All | YouTube | AM | Netflix | GoogleOne | SMM | AI | Viu | Spotify
+    let currentMain = "All";
+    let currentSub = "All";
 
     // ===== CATEGORY DEFINITIONS =====
     const APPS_PREMIUM_CATS = ["youtube","am","netflix","googleone","smm","ai","viu","spotify"];
@@ -303,7 +298,7 @@
     const MAIN_TABS = [
       { label: "Semua", value: "All" },
       { label: "Apps Premium", value: "AppsPremium" },
-      { label: "Paket Data", value: "PaketData" }, // label rapi, value sheet tetap PaketData
+      { label: "Paket Data", value: "PaketData" },
       { label: "Apps", value: "Apps" },
     ];
 
@@ -398,20 +393,15 @@
         const pCat = normalizeCat(p.category);
         const matchSearch = normalizeCat(p.name).includes(searchTerm);
 
-        // MAIN: Semua
         if (currentMain === "All") return matchSearch;
 
-        // MAIN: Apps Premium + sub kategori
         if (currentMain === "AppsPremium") {
           const isInAppsPremium = APPS_PREMIUM_CATS.includes(pCat);
-
           if (currentSub === "All") return isInAppsPremium && matchSearch;
-
           const subNormalized = normalizeCat(currentSub);
           return (pCat === subNormalized) && matchSearch;
         }
 
-        // MAIN: kategori lain (PaketData / Apps)
         const target = normalizeCat(currentMain);
         return (pCat === target) && matchSearch;
       });
@@ -419,7 +409,7 @@
       renderProducts(filtered);
     }
 
-    // ===== RENDER PRODUCTS (TIDAK DIUBAH FUNGSI UTAMA) =====
+    // ===== RENDER PRODUCTS =====
     function renderProducts(products) {
       const pGrid = document.getElementById('productGrid');
       pGrid.innerHTML = '';
@@ -433,7 +423,6 @@
       products.forEach(p => {
         const isReady = p.status && p.status.toLowerCase() === 'ready';
 
-        // PERBAIKAN LOGO [object Object]
         let iconContent = '';
         let rawIcon = p.icon;
         if (typeof rawIcon === 'object' || !rawIcon) {
@@ -447,14 +436,12 @@
           }
         }
 
-        // LOGIKA PESAN WHATSAPP PINTAR
+        // (pesan WA tetap dipertahankan jika kamu butuh)
         const tanggal = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         const waktu = new Date().toLocaleTimeString('id-ID');
-
         const isPaketData = (p.category || "").toString().trim().toLowerCase() === 'paketdata';
 
         let textPesan = "";
-
         if (isPaketData) {
           textPesan = `🛒 *FORMULIR PESANAN - SYURASTORE*\n` +
             `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
@@ -478,8 +465,11 @@
             `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
             `Halo Admin, saya ingin memesan produk di atas. Mohon instruksi pembayaran selanjutnya ya! 🙏`;
         }
-
         const waMessage = encodeURIComponent(textPesan);
+
+        // ✅ LINK KE DOMAIN PAYMENT (domain 2) + bawa data produk
+        const payLink =
+          `${PAYMENT_DOMAIN}/?product=${encodeURIComponent(p.name)}&price=${encodeURIComponent(p.price)}&category=${encodeURIComponent(p.category || '')}`;
 
         pGrid.innerHTML += `
           <div class="glass-card p-8 rounded-[2.5rem] flex flex-col h-full ${!isReady ? 'opacity-60' : ''}">
@@ -496,10 +486,25 @@
                 <span class="text-2xl font-black text-primary">${p.price}</span>
               </div>
               ${isReady
-                ? `<a href="https://wa.me/${MY_PHONE_NUMBER}?text=${waMessage}" target="_blank" class="bg-primary text-slate-900 px-6 py-3 rounded-2xl font-bold shadow-lg hover:scale-105 transition-all">Pesan Sekarang</a>`
+                ? `
+                  <a href="${payLink}" target="_blank"
+                     class="bg-primary text-slate-900 px-6 py-3 rounded-2xl font-bold shadow-lg hover:scale-105 transition-all">
+                    Bayar / Konfirmasi
+                  </a>
+                `
                 : `<button disabled class="bg-slate-700 text-slate-500 px-6 py-3 rounded-2xl font-bold cursor-not-allowed uppercase text-[10px]">Layanan Habis</button>`
               }
             </div>
+
+            <!-- opsional: kalau mau tetap ada WA manual, buka komentar ini -->
+            <!--
+            <div class="mt-4">
+              <a href="https://wa.me/${MY_PHONE_NUMBER}?text=${waMessage}" target="_blank"
+                 class="block text-center bg-slate-800 border border-slate-700 px-6 py-3 rounded-2xl font-bold hover:bg-slate-700 transition">
+                Pesan via WhatsApp
+              </a>
+            </div>
+            -->
           </div>
         `;
       });
