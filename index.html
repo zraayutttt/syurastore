@@ -60,7 +60,7 @@
           Menghubungkan Server...
         </div>
 
-        <button onclick="openOrderModal()"
+        <button type="button" onclick="openOrderModal()"
           class="bg-slate-800 border border-slate-700 text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-700 transition">
           Cara Order
         </button>
@@ -79,7 +79,7 @@
         <a href="#layanan" class="text-slate-300 hover:text-white whitespace-nowrap">Layanan</a>
         <a href="#informasi" class="text-slate-300 hover:text-white whitespace-nowrap">Informasi</a>
         <a href="#kontak" class="text-slate-300 hover:text-white whitespace-nowrap">Kontak</a>
-        <button onclick="openOrderModal()" class="text-slate-300 hover:text-white whitespace-nowrap font-bold">
+        <button type="button" onclick="openOrderModal()" class="text-slate-300 hover:text-white whitespace-nowrap font-bold">
           Cara Order
         </button>
         <span id="loadingStatusMobile" class="ml-auto text-xs text-slate-500 animate-pulse whitespace-nowrap">
@@ -105,7 +105,7 @@
           class="w-full p-4 rounded-2xl bg-slate-800 border border-slate-700 outline-none focus:border-primary text-white transition-all">
 
         <div class="flex flex-wrap gap-3">
-          <button onclick="openOrderModal()"
+          <button type="button" onclick="openOrderModal()"
             class="bg-slate-800 border border-slate-700 text-white px-5 py-3 rounded-2xl font-bold hover:bg-slate-700 transition">
             Cara Order
           </button>
@@ -133,7 +133,7 @@
             <h2 class="text-3xl font-extrabold mb-1">Informasi</h2>
             <p class="text-slate-400">Panduan singkat biar order kamu lancar.</p>
           </div>
-          <button onclick="openOrderModal()"
+          <button type="button" onclick="openOrderModal()"
             class="bg-primary text-slate-900 px-5 py-3 rounded-2xl font-extrabold hover:scale-[1.02] transition">
             Buka Cara Order
           </button>
@@ -231,7 +231,7 @@
             <h2 class="text-3xl font-extrabold">Cara Order</h2>
             <p class="text-slate-400 mt-1">Ikuti langkah ini biar pesanan kamu cepat diproses.</p>
           </div>
-          <button id="closeOrderModal"
+          <button type="button" id="closeOrderModal"
             class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-black">
             ✕
           </button>
@@ -260,11 +260,11 @@
         </div>
 
         <div class="mt-7 flex flex-col sm:flex-row gap-3">
-          <button id="btnOrderToWA"
+          <button type="button" id="btnOrderToWA"
             class="bg-primary text-slate-900 px-6 py-3 rounded-2xl font-extrabold shadow hover:scale-[1.02] transition">
             Chat Admin Sekarang
           </button>
-          <button id="btnCloseModal2"
+          <button type="button" id="btnCloseModal2"
             class="bg-slate-800 border border-slate-700 px-6 py-3 rounded-2xl font-bold hover:bg-slate-700 transition">
             Tutup
           </button>
@@ -284,7 +284,7 @@
     const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbya5auCKLoaiidDwXlwIa0KZ-yFrOjjnZXJIQl9ok6Tid673RAlcr2-nelP3mLatLKu/exec";
     const MY_PHONE_NUMBER = "6282175939107";
 
-    // ✅ DOMAIN PAYMENT (DOMAIN KE-2) — GANTI JIKA URL PAYMENT KAMU BERBEDA
+    // ✅ DOMAIN PAYMENT (DOMAIN KE-2)
     const PAYMENT_DOMAIN = "https://syurastorepayment.netlify.app";
 
     // ===== STATE =====
@@ -423,6 +423,7 @@
       products.forEach(p => {
         const isReady = p.status && p.status.toLowerCase() === 'ready';
 
+        // PERBAIKAN LOGO [object Object]
         let iconContent = '';
         let rawIcon = p.icon;
         if (typeof rawIcon === 'object' || !rawIcon) {
@@ -436,40 +437,9 @@
           }
         }
 
-        // (pesan WA tetap dipertahankan jika kamu butuh)
-        const tanggal = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const waktu = new Date().toLocaleTimeString('id-ID');
-        const isPaketData = (p.category || "").toString().trim().toLowerCase() === 'paketdata';
-
-        let textPesan = "";
-        if (isPaketData) {
-          textPesan = `🛒 *FORMULIR PESANAN - SYURASTORE*\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-            `📦 *RINCIAN PAKET DATA:*\n` +
-            `• *Produk:* ${p.name}\n` +
-            `• *Ket:* ${p.desc || '-'}\n` +
-            `• *Harga:* Rp ${p.price}\n\n` +
-            `📱 *DATA TUJUAN:*\n` +
-            `• *Nomor HP:* (Ketik Nomor HP Anda di sini)\n\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-            `Halo Admin, saya ingin membeli paket data di atas. Mohon segera diproses ke nomor tersebut ya! 🙏`;
-        } else {
-          textPesan = `🛒 *PESANAN BARU - SYURASTORE* 🛒\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-            `📦 *RINCIAN LAYANAN:*\n` +
-            `• *Produk:* ${p.name}\n` +
-            `• *Ket:* ${p.desc || '-'}\n` +
-            `• *Harga:* Rp ${p.price}\n\n` +
-            `📅 *WAKTU TRANSAKSI:*\n` +
-            `• ${tanggal} (${waktu} WIB)\n\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-            `Halo Admin, saya ingin memesan produk di atas. Mohon instruksi pembayaran selanjutnya ya! 🙏`;
-        }
-        const waMessage = encodeURIComponent(textPesan);
-
-        // ✅ LINK KE DOMAIN PAYMENT (domain 2) + bawa data produk
+        // LINK KE DOMAIN PAYMENT (domain 2) + bawa data produk
         const payLink =
-          `${PAYMENT_DOMAIN}/?product=${encodeURIComponent(p.name)}&price=${encodeURIComponent(p.price)}&category=${encodeURIComponent(p.category || '')}`;
+          `${PAYMENT_DOMAIN}/?product=${encodeURIComponent(p.name || '')}&price=${encodeURIComponent(p.price || '')}&category=${encodeURIComponent(p.category || '')}`;
 
         pGrid.innerHTML += `
           <div class="glass-card p-8 rounded-[2.5rem] flex flex-col h-full ${!isReady ? 'opacity-60' : ''}">
@@ -495,16 +465,6 @@
                 : `<button disabled class="bg-slate-700 text-slate-500 px-6 py-3 rounded-2xl font-bold cursor-not-allowed uppercase text-[10px]">Layanan Habis</button>`
               }
             </div>
-
-            <!-- opsional: kalau mau tetap ada WA manual, buka komentar ini -->
-            <!--
-            <div class="mt-4">
-              <a href="https://wa.me/${MY_PHONE_NUMBER}?text=${waMessage}" target="_blank"
-                 class="block text-center bg-slate-800 border border-slate-700 px-6 py-3 rounded-2xl font-bold hover:bg-slate-700 transition">
-                Pesan via WhatsApp
-              </a>
-            </div>
-            -->
           </div>
         `;
       });
