@@ -35,8 +35,6 @@
     .status-ready { background: #16a34a; color: white; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: bold; }
     .status-kosong { background: #dc2626; color: white; padding: 2px 10px; border-radius: 20px; font-size: 10px; font-weight: bold; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
-
-    /* biar klik menu tidak ketutup navbar sticky */
     section { scroll-margin-top: 120px; }
   </style>
 </head>
@@ -117,24 +115,11 @@
           </a>
         </div>
 
-        <div id="categoryTabs" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar mt-2">
-          <button onclick="setCategory('All')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800 tab-active">Semua</button>
-          <button onclick="setCategory('PaketData')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">PaketData</button>
-          <button onclick="setCategory('YouTube')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">YouTube</button>
-          <button onclick="setCategory('AM')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">AM</button>
-          <button onclick="setCategory('Netflix')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Netflix</button>
-          <button onclick="setCategory('GoogleOne')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">GoogleOne</button>
-          <button onclick="setCategory('Vidio')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Vidio</button>
-          <button onclick="setCategory('Disney')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Disney</button>
-          <button onclick="setCategory('Apple')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Apple</button>
-          <button onclick="setCategory('Canva')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Canva</button>
-          <button onclick="setCategory('CapCut')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">CapCut</button>
-          <button onclick="setCategory('Apps')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Apps</button>
-          <button onclick="setCategory('SMM')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">SMM</button>
-          <button onclick="setCategory('AI')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">AI</button>
-          <button onclick="setCategory('Viu')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Viu</button>
-          <button onclick="setCategory('Spotify')" class="tab-btn px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800">Spotify</button>
-        </div>
+        <!-- MENU UTAMA -->
+        <div id="mainCategoryTabs" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar"></div>
+
+        <!-- SUB MENU (muncul saat Apps Premium) -->
+        <div id="subCategoryTabs" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar hidden"></div>
       </div>
 
       <div id="productGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto"></div>
@@ -303,13 +288,42 @@
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
 
-    // --- MASUKKAN URL WEB APP GOOGLE SHEETS ANDA DI SINI ---
+    // ===== CONFIG =====
     const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbya5auCKLoaiidDwXlwIa0KZ-yFrOjjnZXJIQl9ok6Tid673RAlcr2-nelP3mLatLKu/exec";
     const MY_PHONE_NUMBER = "6282175939107";
 
+    // ===== STATE =====
     let allProducts = [];
-    let currentCategory = 'All';
+    let currentMain = "All"; // All | AppsPremium | PaketData | Apps
+    let currentSub = "All";  // All | YouTube | AM | Netflix | GoogleOne | SMM | AI | Viu | Spotify
 
+    // ===== CATEGORY DEFINITIONS =====
+    const APPS_PREMIUM_CATS = ["youtube","am","netflix","googleone","smm","ai","viu","spotify"];
+
+    const MAIN_TABS = [
+      { label: "Semua", value: "All" },
+      { label: "Apps Premium", value: "AppsPremium" },
+      { label: "Paket Data", value: "PaketData" }, // label rapi, value sheet tetap PaketData
+      { label: "Apps", value: "Apps" },
+    ];
+
+    const SUB_TABS_APPS_PREMIUM = [
+      { label: "Semua", value: "All" },
+      { label: "YouTube", value: "YouTube" },
+      { label: "AM", value: "AM" },
+      { label: "Netflix", value: "Netflix" },
+      { label: "GoogleOne", value: "GoogleOne" },
+      { label: "SMM", value: "SMM" },
+      { label: "AI", value: "AI" },
+      { label: "Viu", value: "Viu" },
+      { label: "Spotify", value: "Spotify" },
+    ];
+
+    function normalizeCat(x) {
+      return (x || "").toString().trim().toLowerCase();
+    }
+
+    // ===== MODAL =====
     function openOrderModal() {
       document.getElementById("orderModal").classList.remove("hidden");
     }
@@ -317,11 +331,52 @@
       document.getElementById("orderModal").classList.add("hidden");
     }
 
+    // ===== TABS RENDER =====
+    function renderTabs() {
+      const mainWrap = document.getElementById("mainCategoryTabs");
+      const subWrap = document.getElementById("subCategoryTabs");
+
+      mainWrap.innerHTML = MAIN_TABS.map(t => `
+        <button
+          onclick="setMainCategory('${t.value}')"
+          class="px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800 ${currentMain === t.value ? 'tab-active' : ''}">
+          ${t.label}
+        </button>
+      `).join("");
+
+      if (currentMain === "AppsPremium") {
+        subWrap.classList.remove("hidden");
+        subWrap.innerHTML = SUB_TABS_APPS_PREMIUM.map(t => `
+          <button
+            onclick="setSubCategory('${t.value}')"
+            class="px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800 ${currentSub === t.value ? 'tab-active' : ''}">
+            ${t.label}
+          </button>
+        `).join("");
+      } else {
+        subWrap.classList.add("hidden");
+        subWrap.innerHTML = "";
+      }
+    }
+
+    function setMainCategory(value) {
+      currentMain = value;
+      if (currentMain !== "AppsPremium") currentSub = "All";
+      renderTabs();
+      filterProducts();
+    }
+
+    function setSubCategory(value) {
+      currentSub = value;
+      renderTabs();
+      filterProducts();
+    }
+
+    // ===== DATA FETCH =====
     async function fetchProducts() {
       try {
         const response = await fetch(SHEET_API_URL);
         allProducts = await response.json();
-        // Urutkan A-Z
         allProducts.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
         filterProducts();
 
@@ -335,40 +390,50 @@
       }
     }
 
-    function setCategory(cat) {
-      currentCategory = cat;
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('tab-active');
-        if (btn.innerText.toLowerCase() === (cat === 'All' ? 'semua' : cat.toLowerCase())) btn.classList.add('tab-active');
-      });
-      filterProducts();
-    }
-
+    // ===== FILTER =====
     function filterProducts() {
       const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
       const filtered = allProducts.filter(p => {
-        const pCat = (p.category || "").toString().trim().toLowerCase();
-        const targetCat = currentCategory.toLowerCase();
-        const matchCat = currentCategory === 'All' || pCat === targetCat;
-        const matchSearch = (p.name || "").toLowerCase().includes(searchTerm);
-        return matchCat && matchSearch;
+        const pCat = normalizeCat(p.category);
+        const matchSearch = normalizeCat(p.name).includes(searchTerm);
+
+        // MAIN: Semua
+        if (currentMain === "All") return matchSearch;
+
+        // MAIN: Apps Premium + sub kategori
+        if (currentMain === "AppsPremium") {
+          const isInAppsPremium = APPS_PREMIUM_CATS.includes(pCat);
+
+          if (currentSub === "All") return isInAppsPremium && matchSearch;
+
+          const subNormalized = normalizeCat(currentSub);
+          return (pCat === subNormalized) && matchSearch;
+        }
+
+        // MAIN: kategori lain (PaketData / Apps)
+        const target = normalizeCat(currentMain);
+        return (pCat === target) && matchSearch;
       });
+
       renderProducts(filtered);
     }
 
+    // ===== RENDER PRODUCTS (TIDAK DIUBAH FUNGSI UTAMA) =====
     function renderProducts(products) {
       const pGrid = document.getElementById('productGrid');
       pGrid.innerHTML = '';
 
       if (products.length === 0) {
-        pGrid.innerHTML = `<div class="col-span-full text-center py-20 text-slate-500 italic">Layanan ${currentCategory} belum tersedia...</div>`;
+        const label = currentMain === "AppsPremium" ? `Apps Premium` : (currentMain === "PaketData" ? "Paket Data" : currentMain);
+        pGrid.innerHTML = `<div class="col-span-full text-center py-20 text-slate-500 italic">Layanan ${label} belum tersedia...</div>`;
         return;
       }
 
       products.forEach(p => {
         const isReady = p.status && p.status.toLowerCase() === 'ready';
 
-        // --- PERBAIKAN LOGO [object Object] ---
+        // PERBAIKAN LOGO [object Object]
         let iconContent = '';
         let rawIcon = p.icon;
         if (typeof rawIcon === 'object' || !rawIcon) {
@@ -382,16 +447,16 @@
           }
         }
 
-        // --- LOGIKA PESAN WHATSAPP PINTAR ---
+        // LOGIKA PESAN WHATSAPP PINTAR
         const tanggal = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         const waktu = new Date().toLocaleTimeString('id-ID');
+
         const isPaketData = (p.category || "").toString().trim().toLowerCase() === 'paketdata';
 
         let textPesan = "";
 
         if (isPaketData) {
-          textPesan =
-            `🛒 *FORMULIR PESANAN - SYURASTORE*\n` +
+          textPesan = `🛒 *FORMULIR PESANAN - SYURASTORE*\n` +
             `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
             `📦 *RINCIAN PAKET DATA:*\n` +
             `• *Produk:* ${p.name}\n` +
@@ -402,8 +467,7 @@
             `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
             `Halo Admin, saya ingin membeli paket data di atas. Mohon segera diproses ke nomor tersebut ya! 🙏`;
         } else {
-          textPesan =
-            `🛒 *PESANAN BARU - SYURASTORE* 🛒\n` +
+          textPesan = `🛒 *PESANAN BARU - SYURASTORE* 🛒\n` +
             `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
             `📦 *RINCIAN LAYANAN:*\n` +
             `• *Produk:* ${p.name}\n` +
@@ -441,7 +505,7 @@
       });
     }
 
-    // === Floating WhatsApp + Modal events ===
+    // ===== UI EVENTS =====
     document.addEventListener("DOMContentLoaded", () => {
       const waBtn = document.getElementById("waFloatBtn");
       const modal = document.getElementById("orderModal");
@@ -476,7 +540,11 @@
       });
     });
 
-    window.onload = fetchProducts;
+    // ===== INIT =====
+    window.onload = () => {
+      renderTabs();
+      fetchProducts();
+    };
   </script>
 
 </body>
