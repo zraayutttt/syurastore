@@ -294,12 +294,15 @@
 
     // ===== CATEGORY DEFINITIONS =====
     const APPS_PREMIUM_CATS = ["youtube","am","netflix","googleone","smm","ai","viu","spotify"];
+    const SC_PANEL_CATS = ["scmenu","scbug"];
 
     const MAIN_TABS = [
       { label: "Semua", value: "All" },
       { label: "Apps Premium", value: "AppsPremium" },
       { label: "Paket Data", value: "PaketData" },
       { label: "Apps", value: "Apps" },
+      { label: "Sc Panel", value: "ScPanel" },
+      { label: "Pterodactyl", value: "Pterodactyl" },
     ];
 
     const SUB_TABS_APPS_PREMIUM = [
@@ -312,6 +315,12 @@
       { label: "AI", value: "AI" },
       { label: "Viu", value: "Viu" },
       { label: "Spotify", value: "Spotify" },
+    ];
+
+        const SUB_SC_PANEL = [
+      { label: "Semua", value: "All" },
+      { label: "Sc Menu", value: "ScMenu" },
+      { label: "Sc Bug", value: "ScBug" },
     ];
 
     function normalizeCat(x) {
