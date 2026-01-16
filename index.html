@@ -118,7 +118,7 @@
         <!-- MENU UTAMA -->
         <div id="mainCategoryTabs" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar"></div>
 
-        <!-- SUB MENU (muncul saat Apps Premium) -->
+        <!-- SUB MENU -->
         <div id="subCategoryTabs" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar hidden"></div>
       </div>
 
@@ -292,10 +292,10 @@
     let currentMain = "All";
     let currentSub = "All";
 
-    // ===== CATEGORY DEFINITIONS =====
+    // ===== CATEGORY DEFINITIONS (sesuai kategori di SHEET) =====
     const APPS_PREMIUM_CATS = ["youtube","am","netflix","googleone","smm","ai","viu","spotify"];
-    const SC_PANEL_CATS = ["scmenu","scbug"];
-    const PTERODACTYL_CATS = ["panel","titlepanelprivate"];
+    const SC_PANEL_CATS     = ["scmenu","scbug"];
+    const PTERODACTYL_CATS  = ["panel","titlepanelprivate"];
 
     const MAIN_TABS = [
       { label: "Semua", value: "All" },
@@ -318,20 +318,47 @@
       { label: "Spotify", value: "Spotify" },
     ];
 
-        const SUB_SC_PANEL = [
+    const SUB_TABS_SC_PANEL = [
       { label: "Semua", value: "All" },
-      { label: "Sc Menu", value: "ScMenu" },
-      { label: "Sc Bug", value: "ScBug" },
+      { label: "SC Menu", value: "ScMenu" },
+      { label: "SC Bug", value: "ScBug" },
     ];
 
-        const SUB_PTERODACTYL = [
+    const SUB_TABS_PTERODACTYL = [
       { label: "Semua", value: "All" },
-      { label: "Panel", value: "panel" },
-      { label: "Title Panel Private", value: "titlepanelprivate" },
+      { label: "Panel", value: "Panel" },
+      { label: "Title Panel Private", value: "TitlePanelPrivate" },
     ];
 
+    // ✅ group main->list kategori di sheet
+    const MAIN_GROUPS = {
+      AppsPremium: APPS_PREMIUM_CATS,
+      ScPanel: SC_PANEL_CATS,
+      Pterodactyl: PTERODACTYL_CATS,
+    };
+
+    // ✅ main->sub tabs
+    const SUB_TABS_MAP = {
+      AppsPremium: SUB_TABS_APPS_PREMIUM,
+      ScPanel: SUB_TABS_SC_PANEL,
+      Pterodactyl: SUB_TABS_PTERODACTYL,
+    };
+
+    // ✅ NORMALIZE: dibuat lebih “tahan banting”
+    // - hilangkan spasi, underscore, dash
+    // jadi "Paket Data" = "paketdata"
     function normalizeCat(x) {
-      return (x || "").toString().trim().toLowerCase();
+      return (x || "")
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "")
+        .replace(/[-_]/g, "");
+    }
+
+    function getMainLabel(value) {
+      const found = MAIN_TABS.find(t => t.value === value);
+      return found ? found.label : value;
     }
 
     // ===== MODAL =====
@@ -355,9 +382,10 @@
         </button>
       `).join("");
 
-      if (currentMain === "AppsPremium") {
+      const subTabs = SUB_TABS_MAP[currentMain];
+      if (subTabs) {
         subWrap.classList.remove("hidden");
-        subWrap.innerHTML = SUB_TABS_APPS_PREMIUM.map(t => `
+        subWrap.innerHTML = subTabs.map(t => `
           <button
             onclick="setSubCategory('${t.value}')"
             class="px-6 py-2 rounded-full border border-slate-700 text-sm whitespace-nowrap bg-slate-800 ${currentSub === t.value ? 'tab-active' : ''}">
@@ -372,7 +400,7 @@
 
     function setMainCategory(value) {
       currentMain = value;
-      if (currentMain !== "AppsPremium") currentSub = "All";
+      currentSub = "All"; // ✅ reset sub biar konsisten untuk semua main
       renderTabs();
       filterProducts();
     }
@@ -388,6 +416,7 @@
       try {
         const response = await fetch(SHEET_API_URL);
         allProducts = await response.json();
+
         allProducts.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
         filterProducts();
 
@@ -403,21 +432,30 @@
 
     // ===== FILTER =====
     function filterProducts() {
-      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const searchTerm = (document.getElementById('searchInput').value || "").toLowerCase();
 
       const filtered = allProducts.filter(p => {
         const pCat = normalizeCat(p.category);
-        const matchSearch = normalizeCat(p.name).includes(searchTerm);
+        const pName = (p.name || "").toString().toLowerCase();
+        const matchSearch = pName.includes(searchTerm);
 
         if (currentMain === "All") return matchSearch;
 
-        if (currentMain === "AppsPremium") {
-          const isInAppsPremium = APPS_PREMIUM_CATS.includes(pCat);
-          if (currentSub === "All") return isInAppsPremium && matchSearch;
-          const subNormalized = normalizeCat(currentSub);
-          return (pCat === subNormalized) && matchSearch;
+        // ✅ jika main punya GROUP kategori (AppsPremium / ScPanel / Pterodactyl)
+        if (MAIN_GROUPS[currentMain]) {
+          const groupCats = MAIN_GROUPS[currentMain];
+
+          const isInGroup = groupCats.includes(pCat);
+          if (!isInGroup) return false;
+
+          if (currentSub === "All") return matchSearch;
+
+          // currentSub -> token kategori sheet (scmenu/scbug/panel/titlepanelprivate/...)
+          const subToken = normalizeCat(currentSub);
+          return (pCat === subToken) && matchSearch;
         }
 
+        // ✅ main biasa (Apps / PaketData) -> cocokkan langsung dengan category sheet
         const target = normalizeCat(currentMain);
         return (pCat === target) && matchSearch;
       });
@@ -431,7 +469,7 @@
       pGrid.innerHTML = '';
 
       if (products.length === 0) {
-        const label = currentMain === "AppsPremium" ? `Apps Premium` : (currentMain === "PaketData" ? "Paket Data" : currentMain);
+        const label = getMainLabel(currentMain);
         pGrid.innerHTML = `<div class="col-span-full text-center py-20 text-slate-500 italic">Layanan ${label} belum tersedia...</div>`;
         return;
       }
